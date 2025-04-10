@@ -1,0 +1,18 @@
+viaa:
+    logging:
+        level: DEBUG
+app:
+    self:
+        # App name: not needed but to not leave `self` empty
+        name: "pg-listener-py"
+    pulsar:
+        host: !ENV ${PULSAR_HOST}
+        port: !ENV ${PULSAR_PORT}
+    db:
+        host: !ENV ${DB_HOST}
+        port: !ENV ${DB_PORT}
+        name: !ENV ${DB_NAME}
+        user: !ENV ${DB_USER}
+        passwd: !ENV ${DB_PASSWD}
+        table: !ENV ${DB_TABLE}
+        channel: !ENV ${DB_CHANNEL_NAME}

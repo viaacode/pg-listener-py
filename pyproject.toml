@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pg-listener-py"
+version = "0.1.0"
+description = "Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar."
+readme = "README.md"
+keywords = ["events", "apache-pulsar", "postgresql"]
+requires-python = ">=3.10"
+dependencies = [
+  "psycopg",
+  "meemoo-cloudevents==0.1.0rc3",
+  "viaa-chassis==0.2.1",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.10",
+]
+
+[project.optional-dependencies]
+dev = [
+  "black",
+  "pytest",
+  "pytest-cov",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
