@@ -43,8 +43,14 @@ source .venv/bin/activate
 (.venv) export $(grep -v '^#' .env | xargs)
 ```
 
-2. Run with
+2. Run with:
 
 ```bash
 (.venv) python main.py
+```
+
+3. Login to the configured database and test with:
+
+```bash
+db_name=> NOTIFY a_channel_name, 'a string payload';
 ```
