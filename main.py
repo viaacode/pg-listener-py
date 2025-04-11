@@ -23,7 +23,7 @@ config = config_parser.app_cfg
 log = logging.get_logger(__name__, config=config_parser)
 
 
-def run_main():
+def main():
     log.info(f'Starting listener on channel {config["db"]["channel"]}')
     conn = psycopg.connect(
         host=config["db"]["host"],
@@ -51,6 +51,6 @@ def run_main():
 if __name__ == "__main__":
     try:
         log.info(f'Starting')
-        run_main()
+        main()
     finally:
         log.info('Exiting')
