@@ -1,11 +1,12 @@
-# Std
-import os
-import asyncio
+# std
 import argparse
-# 3d Party
+import asyncio
+import os
+
+# 3rd party
 from psycopg import connect as pg_connect, sql
-# meemoo
-# internal
+
+# meemoo internal
 from cloudevents.events import (
     CEMessageMode,
     Event,
@@ -16,28 +17,30 @@ from cloudevents.events import (
 from viaa.configuration import ConfigParser
 from viaa.observability import logging
 
-
-# Init the config and the logger
+# initialize the config and the logger
 config_parser = ConfigParser()
 config = config_parser.app_cfg
 log = logging.get_logger(__name__, config=config_parser)
 
 APP_NAME = config["self"]
 
+
 def main(args: argparse.Namespace):
     pg_channel_name = args.channel_name or config["db"]["channel"]
 
-    log.info(f'Starting listener on channel {pg_channel_name}')
+    log.info(f"Starting listener on channel {pg_channel_name}")
 
     conn = pg_connect(
         host=config["db"]["host"],
         dbname=config["db"]["name"],
         user=config["db"]["user"],
-        password=config["db"]["password"]
+        password=config["db"]["password"],
     )
 
     cursor = conn.cursor()
-    sql_statement = sql.SQL('LISTEN {channel}').format(channel=sql.Identifier(pg_channel_name))
+    sql_statement = sql.SQL("LISTEN {channel}").format(
+        channel=sql.Identifier(pg_channel_name)
+    )
     cursor.execute(sql_statement)
     conn.commit()
 
@@ -46,7 +49,7 @@ def main(args: argparse.Namespace):
             for notify in conn.notifies(stop_after=0):
                 print(notify.payload)
         except:
-            log.error('Error occurred')
+            log.error("Error occurred")
             raise
 
     loop = asyncio.get_event_loop()
@@ -55,18 +58,20 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar.")
+    parser = argparse.ArgumentParser(
+        description="Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar."
+    )
     parser.add_argument(
-        '-c',
-        '--channel-name',
-        nargs='?',
+        "-c",
+        "--channel-name",
+        nargs="?",
         type=str,
-        help="Name of the channel to listen to. If provided, overrides the configuration value."
+        help="Name of the channel to listen to. If provided, overrides the configuration value.",
     )
     args = parser.parse_args()
 
     try:
-        log.info(f'Starting')
+        log.info(f"Starting")
         main(args)
     finally:
-        log.info('Exiting')
+        log.info("Exiting")
