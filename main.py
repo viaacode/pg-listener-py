@@ -16,13 +16,13 @@ from cloudevents.events import (
 from viaa.configuration import ConfigParser
 from viaa.observability import logging
 
-APP_NAME = "pg-listener-py"
 
 # Init the config and the logger
 config_parser = ConfigParser()
 config = config_parser.app_cfg
 log = logging.get_logger(__name__, config=config_parser)
 
+APP_NAME = config["self"]
 
 def main(args: argparse.Namespace):
     pg_channel_name = args.channel_name or config["db"]["channel"]
