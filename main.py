@@ -51,7 +51,8 @@ def main(args: argparse.Namespace):
             log.error(f"Error occurred while handling Postgres notification: {e}")
             raise
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     loop.add_reader(conn, handle_notify)
     loop.run_forever()
 
