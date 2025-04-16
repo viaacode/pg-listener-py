@@ -3,7 +3,7 @@ import os
 import asyncio
 import argparse
 # 3d Party
-import psycopg
+from psycopg import connect as pg_connect, sql
 # meemoo
 # internal
 from cloudevents.events import (
@@ -29,7 +29,7 @@ def main(args: argparse.Namespace):
 
     log.info(f'Starting listener on channel {pg_channel_name}')
 
-    conn = psycopg.connect(
+    conn = pg_connect(
         host=config["db"]["host"],
         dbname=config["db"]["name"],
         user=config["db"]["user"],
@@ -37,7 +37,8 @@ def main(args: argparse.Namespace):
     )
 
     cursor = conn.cursor()
-    cursor.execute(f'LISTEN {pg_channel_name};')
+    sql_statement = sql.SQL('LISTEN {channel}').format(channel=sql.Identifier(pg_channel_name))
+    cursor.execute(sql_statement)
     conn.commit()
 
     def handle_notify():
