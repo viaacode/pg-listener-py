@@ -1,7 +1,6 @@
 # std
 import argparse
 import asyncio
-import os
 
 # 3rd party
 from psycopg import connect as pg_connect, sql
@@ -48,8 +47,8 @@ def main(args: argparse.Namespace):
         try:
             for notify in conn.notifies(stop_after=0):
                 print(notify.payload)
-        except:
-            log.error("Error occurred")
+        except Exception as e:
+            log.error(f"Error occurred while handling Postgres notification: {e}")
             raise
 
     loop = asyncio.get_event_loop()
@@ -59,19 +58,19 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar."
+        description="Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar."  # noqa: E501
     )
     parser.add_argument(
         "-c",
         "--channel-name",
         nargs="?",
         type=str,
-        help="Name of the channel to listen to. If provided, overrides the configuration value.",
+        help="Name of the channel to listen to. If provided, overrides the configuration value.",  # noqa: E501
     )
     args = parser.parse_args()
 
     try:
-        log.info(f"Starting")
+        log.info(f"Starting `{APP_NAME}' main()")
         main(args)
     finally:
-        log.info("Exiting")
+        log.info(f"Exiting `{APP_NAME}'")
