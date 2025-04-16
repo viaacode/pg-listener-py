@@ -8,6 +8,8 @@ app:
     pulsar:
         host: !ENV ${PULSAR_HOST}
         port: !ENV ${PULSAR_PORT}
+        namespace: !ENV ${PULSAR_NAMESPACE}
+        topic: !ENV ${PULSAR_TOPIC}
     db:
         host: !ENV ${DB_HOST}
         port: !ENV ${DB_PORT}
