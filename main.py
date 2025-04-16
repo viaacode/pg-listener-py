@@ -33,7 +33,7 @@ def main(args: argparse.Namespace):
         host=config["db"]["host"],
         dbname=config["db"]["name"],
         user=config["db"]["user"],
-        password=config["db"]["passwd"]
+        password=config["db"]["password"]
     )
 
     cursor = conn.cursor()
