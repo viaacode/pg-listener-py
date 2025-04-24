@@ -43,6 +43,21 @@ source .venv/bin/activate
 (.venv) export $(grep -v '^#' .env | xargs)
 ```
 
+Check usage:
+
+```bash
+(.venv) python main.py -h
+
+usage: main.py [-h] [-c [CHANNEL_NAME]]
+
+Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar.
+
+options:
+  -h, --help            show this help message and exit
+  -c [CHANNEL_NAME], --channel-name [CHANNEL_NAME]
+                        Name of the channel to listen to. If provided, overrides the configuration value.
+```
+
 2. Run with:
 
 ```bash
