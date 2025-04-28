@@ -121,7 +121,7 @@ def main(args: argparse.Namespace):
     def handle_notify():
         try:
             for notify in conn.notifies(stop_after=0):
-                log.debug(f"Got a Postgres notification with payload {notify.payload}")
+                log.debug(f"Got a Postgres notification with payload: '{notify.payload}'")
                 send_event(producer, data=notify.payload)
 
         except Exception as e:
