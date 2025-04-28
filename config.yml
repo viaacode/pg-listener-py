@@ -8,11 +8,13 @@ app:
     pulsar:
         host: !ENV ${PULSAR_HOST}
         port: !ENV ${PULSAR_PORT}
+        namespace: !ENV ${PULSAR_NAMESPACE}
+        topic: !ENV ${PULSAR_TOPIC}
     db:
         host: !ENV ${DB_HOST}
         port: !ENV ${DB_PORT}
         name: !ENV ${DB_NAME}
         user: !ENV ${DB_USER}
-        passwd: !ENV ${DB_PASSWD}
+        password: !ENV ${DB_PASSWORD}
         table: !ENV ${DB_TABLE}
         channel: !ENV ${DB_CHANNEL_NAME}
