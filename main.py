@@ -69,7 +69,7 @@ def get_pulsar_producer(client):
 
 def send_event(producer, data):
     data = json.loads(data)
-    if data["correlation_id"]:
+    if data.get("correlation_id"):
         correlation_id = data["correlation_id"]
         del data["correlation_id"]
         attributes = EventAttributes(
