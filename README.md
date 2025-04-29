@@ -64,8 +64,8 @@ options:
 (.venv) python main.py
 ```
 
-3. Login to the configured database and test with:
+3. Login to the configured database and test with, for example:
 
 ```bash
-db_name=> NOTIFY a_channel_name, 'a string payload';
+db_name=> NOTIFY a_channel_name, '{"essence_name": "a value"}';
 ```
