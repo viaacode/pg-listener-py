@@ -101,8 +101,9 @@ def main(args: argparse.Namespace):
     producer = get_pulsar_producer(client)
 
     pg_channel_name = args.channel_name or config["db"]["channel"]
+    db_host = config["db"]["host"]
 
-    log.info(f"Starting listener on channel {pg_channel_name}")
+    log.info(f"Starting listener on channel '{pg_channel_name}' on host '{db_host}'.")
 
     conn = pg_connect(
         host=config["db"]["host"],
