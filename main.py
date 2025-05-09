@@ -3,12 +3,12 @@ import argparse
 import asyncio
 import json
 import logging as std_logging
-from retry import retry
 
 # 3rd party
 from psycopg import connect as pg_connect, sql
 import pulsar
 from pulsar import Client as PulsarClient
+from retry import retry
 
 # meemoo internal
 from cloudevents.events import (
