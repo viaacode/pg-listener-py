@@ -67,25 +67,36 @@ def get_pulsar_producer(client):
     return producer
 
 
-def send_event(producer, data):
-    data = json.loads(data)
-    if data.get("correlation_id"):
-        correlation_id = data["correlation_id"]
-        del data["correlation_id"]
-        attributes = EventAttributes(
-            type=config["pulsar"]["topic"],
-            source=APP_NAME,
-            subject=data["essence_name"],
-            correlation_id=correlation_id,
-        )
-    else:
-        attributes = EventAttributes(
-            type=config["pulsar"]["topic"],
-            source=APP_NAME,
-            subject=data["essence_name"],
-        )
+def send_pulsar_event(producer, notification):
+    def get_cloudevent_data(notification):
+        if data := notification.get("data"):
+            return data
+        else:
+            error_message = "got a notification without data"
+            log.error(f"{error_message}: {notification}")
+            raise ValueError(error_message)
 
-    event = Event(attributes, data)
+    def get_cloudevent_subject(notification):
+        if essence_name := notification.get("essence_name"):
+            return essence_name
+
+        data = get_cloudevent_data(notification)
+        if essence_id := data.get("essence_id"):
+            return str(essence_id)
+        else:
+            error_message = "got a notification without essence name or ID"
+            log.error(f"{error_message}: {notification}")
+            raise ValueError(error_message)
+
+    notification = json.loads(notification)
+    subject = get_cloudevent_subject(notification)
+    attributes = EventAttributes(
+        type=config["pulsar"]["topic"],
+        source=APP_NAME,
+        subject=subject,
+    )
+
+    event = Event(attributes, get_cloudevent_data(notification))
     create_msg = PulsarBinding.to_protocol(event, CEMessageMode.STRUCTURED.value)
 
     message_id = producer.send(
@@ -93,7 +104,9 @@ def send_event(producer, data):
         properties=create_msg.attributes,
         event_timestamp=event.get_event_time_as_int(),
     )
-    log.info(f"sent a Pulsar event with ID {message_id}")
+    log.info(
+        f"sent a Pulsar event with ID {message_id} & subject {subject}", subject=subject
+    )
 
 
 def main(args: argparse.Namespace):
@@ -122,8 +135,8 @@ def main(args: argparse.Namespace):
     def handle_notify():
         try:
             for notify in conn.notifies(stop_after=0):
-                log.debug(f"Got a Postgres notification with payload: '{notify.payload}'")
-                send_event(producer, data=notify.payload)
+                log.debug("Got a Postgres notification", payload=notify.payload)
+                send_pulsar_event(producer, notify.payload)
 
         except Exception as e:
             log.error(f"Error occurred while handling Postgres notification: {e}")
