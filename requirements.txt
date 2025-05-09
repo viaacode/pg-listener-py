@@ -1,0 +1,6 @@
+meemoo-cloudevents==0.1.0rc3
+psycopg==3.2.1
+psycopg-binary==3.2.1
+psycopg-pool==3.2.3
+pulsar-client==3.5.0
+viaa-chassis==0.2.1

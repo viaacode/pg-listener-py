@@ -1,0 +1,157 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    tags: "exec"
+  name: "pg-listener-py"
+  labels:
+    app: "pg-listener-py"
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "pg-listener-py-${env}"
+      namespace: "vrt-intake"
+      labels:
+        app: "pg-listener-py"
+        app.kubernetes.io/component: "pg-listener-py-${env}"
+        app.kubernetes.io/instance: "pg-listener-py-${env}"
+        app.kubernetes.io/name: "pg-listener-py"
+        app.kubernetes.io/part-of: "pg-listener-py"
+        app.openshift.io/runtime: "pg-listener-py"
+        app.openshift.io/runtime-version: "${env}"
+        env: ${env}
+    spec:
+      ports:
+        - protocol: TCP
+          port: ${{svc_port}}
+          targetPort: ${{svc_port}}
+          name: http
+      selector:
+        app: "pg-listener-py"
+        env: ${env}
+      clusterIP:
+      type: ClusterIP
+      sessionAffinity: None
+    status:
+      loadBalancer: {}
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      annotations:
+        alpha.image.policy.openshift.io/resolve-names: "*"
+      name: "pg-listener-py-${env}"
+      namespace: "vrt-intake"
+      labels:
+        app: "pg-listener-py"
+        app.kubernetes.io/component: "pg-listener-py-${env}"
+        app.kubernetes.io/instance: "pg-listener-py-${env}"
+        app.kubernetes.io/name: "pg-listener-py"
+        app.kubernetes.io/part-of: "pg-listener-py"
+        app.openshift.io/runtime: "pg-listener-py"
+        app.openshift.io/runtime-version: ${env}
+        env: ${env}
+    spec:
+      replicas: 0
+      selector:
+        matchLabels:
+          app: "pg-listener-py"
+          env: ${env}
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: "pg-listener-py"
+            deploymentconfig: "pg-listener-py-${env}"
+            env: ${env}
+          annotations:
+            openshift.io/generated-by: OpenShiftWebConsole
+        spec:
+          containers:
+            - name: "pg-listener-py-${env}"
+              terminationMessagePath: /dev/termination-log
+              resources:
+                limits:
+                  cpu: '${cpu_limit}m'
+                  memory: '${memory_limit}Mi'
+                requests:
+                  cpu: '${cpu_requested}m'
+                  memory: '${memory_requested}Mi'
+              ports:
+                - containerPort: ${{svc_port}}
+                  protocol: TCP
+              imagePullPolicy: IfNotPresent
+              terminationMessagePolicy: File
+              envFrom:
+                - configMapRef:
+                    name: "pg-listener-py-${env}"
+                - secretRef:
+                    name: "pg-listener-py-${env}"
+              image: >-
+                image-registry.openshift-image-registry.svc:5000/vrt-intake/pg-listener-py:${env}
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 25%
+          maxSurge: 25%
+      revisionHistoryLimit: 10
+      progressDeadlineSeconds: 600
+  - kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      name: "pg-listener-py-${env}"
+      namespace: "vrt-intake"
+      labels:
+        app: "pg-listener-py"
+        app.kubernetes.io/component: "pg-listener-py-${env}"
+        app.kubernetes.io/instance: "pg-listener-py-${env}"
+        app.kubernetes.io/name: "pg-listener-py"
+        app.kubernetes.io/part-of: "pg-listener-py"
+        app.openshift.io/runtime: "pg-listener-py"
+        app.openshift.io/runtime-version: ${env}
+        env: ${env}
+    data:
+      DB_HOST: some_value
+      DB_PORT: some_value
+      DB_NAME: some_value
+      DB_USER: some_value
+      DB_TABLE: some_value
+      DB_CHANNEL_NAME: some_value
+      PULSAR_HOST: some_value
+      PULSAR_PORT: some_value
+      PULSAR_NAMESPACE: some_value
+      PULSAR_TOPIC: some_value
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: "pg-listener-py-${env}"
+      namespace: "vrt-intake"
+      labels:
+        app: "pg-listener-py"
+        app.kubernetes.io/component: "pg-listener-py-${env}"
+        app.kubernetes.io/instance: "pg-listener-py-${env}"
+        app.kubernetes.io/name: "pg-listener-py"
+        app.kubernetes.io/part-of: "pg-listener-py"
+        app.openshift.io/runtime: "pg-listener-py"
+        app.openshift.io/runtime-version: ${env}
+        env: ${env}
+    stringData:
+      DB_PASSWORD: ''
+parameters:
+  - name: env
+    value: "env"
+  - name: "memory_requested"
+    value: "128"
+  - name: "memory_limit"
+    value: "328"
+  - name: "cpu_requested"
+    value: "100"
+  - name: "cpu_limit"
+    value: "300"
+  - name: "svc_port"
+    value: "8080"
