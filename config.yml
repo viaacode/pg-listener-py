@@ -16,5 +16,4 @@ app:
         name: !ENV ${DB_NAME}
         user: !ENV ${DB_USER}
         password: !ENV ${DB_PASSWORD}
-        table: !ENV ${DB_TABLE}
         channel: !ENV ${DB_CHANNEL_NAME}
