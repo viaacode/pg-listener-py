@@ -82,10 +82,7 @@ pipeline {
 
         stage('INT') {
             when {
-                anyOf {
-                    changeRequest target: 'master'
-                    changeRequest target: 'main'
-                }
+                changeRequest target: 'main'
             }
             steps {
                 container('oc') {
@@ -104,7 +101,7 @@ pipeline {
 
         stage('QAS') {
             when {
-                anyOf { branch 'master'; branch 'main' }
+                branch 'main'
             }
             steps {
                 container('oc') {
