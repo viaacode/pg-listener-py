@@ -33,7 +33,7 @@ def get_pulsar_client():
     """Return a Pulsar client."""
     url = "pulsar://{host}:{port}/"
     url = url.format(**config["pulsar"])
-    log.info(f"Connecting to Pulsar using service URL {url}")
+    log.info(f"Connecting to Pulsar using service URL `{url}'")
 
     # pass a logger to avoid unformatted logging to stdout
     pulsar_logger = std_logging.getLogger("pulsar")
@@ -54,12 +54,7 @@ def get_pulsar_producer(client):
         namespace=config["pulsar"]["namespace"],
         topic=config["pulsar"]["topic"],
     )
-    log.info(
-        "Creating producer {name} on topic {topic}".format(
-            name=APP_NAME,
-            topic=topic,
-        )
-    )
+    log.info(f"Creating producer `{APP_NAME}' on topic `{topic}")
     producer = client.create_producer(
         topic=topic,
         producer_name=APP_NAME,
@@ -72,9 +67,9 @@ def send_pulsar_event(producer, notification):
         if data := notification.get("data"):
             return data
         else:
-            error_message = "got a notification without data"
-            log.error(f"{error_message}: {notification}")
-            raise ValueError(error_message)
+            message = "got a notification without data"
+            log.error(message, pg_notification=notification)
+            raise ValueError(message)
 
     def get_cloudevent_subject(notification):
         if essence_name := notification.get("essence_name"):
@@ -84,11 +79,10 @@ def send_pulsar_event(producer, notification):
         if essence_id := data.get("essence_id"):
             return str(essence_id)
         else:
-            error_message = "got a notification without essence name or ID"
-            log.error(f"{error_message}: {notification}")
-            raise ValueError(error_message)
+            message = "got a notification without essence name or ID"
+            log.error(message, pg_notification=notification)
+            raise ValueError(message)
 
-    notification = json.loads(notification)
     subject = get_cloudevent_subject(notification)
     attributes = EventAttributes(
         type=config["pulsar"]["topic"],
@@ -104,9 +98,7 @@ def send_pulsar_event(producer, notification):
         properties=create_msg.attributes,
         event_timestamp=event.get_event_time_as_int(),
     )
-    log.info(
-        f"sent a Pulsar event with ID {message_id} & subject {subject}", subject=subject
-    )
+    log.info(f"sent a Pulsar event with ID {message_id}", subject=subject)
 
 
 def main(args: argparse.Namespace):
@@ -116,7 +108,7 @@ def main(args: argparse.Namespace):
     pg_channel_name = args.channel_name or config["db"]["channel"]
     db_host = config["db"]["host"]
 
-    log.info(f"Starting listener on channel '{pg_channel_name}' on host '{db_host}'.")
+    log.info(f"Starting listener on channel `{pg_channel_name}' on host `{db_host}'.")
 
     conn = pg_connect(
         host=config["db"]["host"],
@@ -135,8 +127,9 @@ def main(args: argparse.Namespace):
     def handle_notify():
         try:
             for notify in conn.notifies(stop_after=0):
-                log.debug("Got a Postgres notification", payload=notify.payload)
-                send_pulsar_event(producer, notify.payload)
+                payload = json.loads(notify.payload)
+                log.debug("Got a Postgres notification", payload=payload)
+                send_pulsar_event(producer, payload)
 
         except Exception as e:
             log.error(f"Error occurred while handling Postgres notification: {e}")
