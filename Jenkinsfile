@@ -32,15 +32,14 @@ pipeline {
     }
 
     environment {
-        OC_PROJECT = 'vrt-intake'
-        OC_URL     = 'https://c113-e.private.eu-de.containers.cloud.ibm.com:30227'
-        JIRA_URL   = 'meemoo.atlassian.net'
         APP_NAME   = 'pg-listener-py'
-        APP_LANG   = 'python'
+        OC_URL     = 'https://c113-e.private.eu-de.containers.cloud.ibm.com:30227'
+        OC_PROJECT = 'vrt-intake'
+        JIRA_URL   = 'meemoo.atlassian.net'
     }
 
     stages {
-        stage('Calculate extra env vars') {
+        stage('ENV') {
             steps {
                 container('oc') {
                     script {
@@ -53,13 +52,13 @@ pipeline {
             }
         }
 
-        stage('Test code') {
+        stage('Test') {
             steps {
-                sh 'make -f ./.openshift/Makefile test'
+                sh 'make test'
             }
         }
 
-        stage('Build code') {
+        stage('Build') {
             when {
                 not {
                     buildingTag()
@@ -70,7 +69,7 @@ pipeline {
                     script {
                         sh '''
                             oc project $OC_PROJECT
-                            oc set image-lookup $APP_LANGUAGE
+                            oc set image-lookup python
                             oc new-build -l ref=$BRANCH_NAME --strategy=docker --name $APP_NAME-$GIT_SHORT_COMMIT --to $APP_NAME:$GIT_SHORT_COMMIT --binary --context-dir="" || echo Probably already exists, start new build
                             sleep 3
                             oc annotate --overwrite buildconfig/$APP_NAME-$GIT_SHORT_COMMIT ref=$BRANCH_NAME shortcommit=$GIT_SHORT_COMMIT
@@ -81,7 +80,7 @@ pipeline {
             }
         }
 
-        stage('Deploy int') {
+        stage('INT') {
             when {
                 anyOf {
                     changeRequest target: 'master'
@@ -103,7 +102,7 @@ pipeline {
             }
         }
 
-        stage('Deploy qas') {
+        stage('QAS') {
             when {
                 anyOf { branch 'master'; branch 'main' }
             }
@@ -119,7 +118,7 @@ pipeline {
             }
         }
 
-        stage('Deploy prd') {
+        stage('PRD') {
             when {
                 buildingTag()
             }
