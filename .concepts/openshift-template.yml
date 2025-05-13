@@ -120,7 +120,6 @@ objects:
       DB_PORT: some_value
       DB_NAME: some_value
       DB_USER: some_value
-      DB_TABLE: some_value
       DB_CHANNEL_NAME: some_value
       PULSAR_HOST: some_value
       PULSAR_PORT: some_value
