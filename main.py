@@ -83,14 +83,28 @@ def send_pulsar_event(producer, notification):
             log.error(message, pg_notification=notification)
             raise ValueError(message)
 
+    data = get_cloudevent_data(notification)
     subject = get_cloudevent_subject(notification)
-    attributes = EventAttributes(
-        type=config["pulsar"]["topic"],
-        source=APP_NAME,
-        subject=subject,
-    )
+    if correlation_id := data.get("correlation_id"):
+        del data["correlation_id"]
+        attributes = EventAttributes(
+            type=config["pulsar"]["topic"],
+            source=APP_NAME,
+            subject=subject,
+            correlation_id=correlation_id,
+        )
+    else:
+        log.warn(
+            f"Received a notification without a correlation_id",
+            notification=notification,
+        )
+        attributes = EventAttributes(
+            type=config["pulsar"]["topic"],
+            source=APP_NAME,
+            subject=subject,
+        )
 
-    event = Event(attributes, get_cloudevent_data(notification))
+    event = Event(attributes, data)
     create_msg = PulsarBinding.to_protocol(event, CEMessageMode.STRUCTURED.value)
 
     message_id = producer.send(
