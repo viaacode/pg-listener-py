@@ -95,7 +95,7 @@ def send_pulsar_event(producer, notification):
         )
     else:
         log.warn(
-            f"Received a notification without a correlation_id",
+            f"`{producer.producer_name()}' received a Postgres notification without correlation_id",  # noqa: E501
             notification=notification,
         )
         attributes = EventAttributes(
@@ -112,7 +112,10 @@ def send_pulsar_event(producer, notification):
         properties=create_msg.attributes,
         event_timestamp=event.get_event_time_as_int(),
     )
-    log.info(f"sent a Pulsar event with ID {message_id}", subject=subject)
+    log.info(
+        f"`{producer.producer_name()}' sent event with ID {message_id} to `{producer.topic()}'",  # noqa: E501
+        subject=subject,
+    )
 
 
 def main(args: argparse.Namespace):
@@ -122,7 +125,7 @@ def main(args: argparse.Namespace):
     pg_channel_name = args.channel_name or config["db"]["channel"]
     db_host = config["db"]["host"]
 
-    log.info(f"Starting listener on channel `{pg_channel_name}' on host `{db_host}'.")
+    log.info(f"Starting listener on channel `{pg_channel_name}' on host `{db_host}'")
 
     conn = pg_connect(
         host=config["db"]["host"],
