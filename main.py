@@ -94,7 +94,7 @@ def send_pulsar_event(producer, notification):
             correlation_id=correlation_id,
         )
     else:
-        log.warn(
+        log.warning(
             f"`{producer.producer_name()}' received a Postgres notification without correlation_id",  # noqa: E501
             notification=notification,
         )
