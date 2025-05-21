@@ -122,16 +122,17 @@ def main(args: argparse.Namespace):
     client = get_pulsar_client()
     producer = get_pulsar_producer(client)
 
-    pg_channel_name = args.channel_name or config["db"]["channel"]
-    db_host = config["db"]["host"]
+    pg_config = config["db"]
+    pg_channel_name = args.channel_name or pg_config["channel"]
+    db_host = pg_config["host"]
 
     log.info(f"Starting listener on channel `{pg_channel_name}' on host `{db_host}'")
 
     conn = pg_connect(
-        host=config["db"]["host"],
-        dbname=config["db"]["name"],
-        user=config["db"]["user"],
-        password=config["db"]["password"],
+        host=pg_config["host"],
+        dbname=pg_config["name"],
+        user=pg_config["user"],
+        password=pg_config["password"],
     )
 
     cursor = conn.cursor()
