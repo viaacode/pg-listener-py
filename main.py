@@ -5,7 +5,7 @@ import json
 import logging as std_logging
 
 # 3rd party
-from psycopg import connect as pg_connect, sql
+from psycopg import AsyncConnection, Error as PsycopgError, sql
 import pulsar
 from pulsar import Client as PulsarClient
 from retry import retry
@@ -124,45 +124,55 @@ def send_pulsar_event(producer, notification):
     )
 
 
+async def listen_forever(config, channel, producer):
+    """
+    Keep a Postgres LISTEN connection active, reconnecting when needed.
+
+    If reconnecting doesn't work, just fail so we notice the failures in
+    OpenShift.
+    """
+    (retry, max_retries) = (0, 5)
+    sleep_seconds = 2
+    listen = sql.SQL("LISTEN {channel}").format(channel=sql.Identifier(channel))
+    while True:
+        try:
+            async with await AsyncConnection.connect(
+                **config, autocommit=True
+            ) as connection:
+                retry = 0  # reset retry counter
+                await connection.cursor().execute(listen)
+                log.info(f"Started to LISTEN to `{channel}'")
+                async for notify in connection.notifies():
+                    try:
+                        payload = json.loads(notify.payload)
+                        log.info("Got a Postgres notification", notification=payload)
+                        send_pulsar_event(producer, payload)
+                    except Exception as e:
+                        log.error(f"Failed to handle Postgres notification: {e}")
+        except PsycopgError as e:
+            if retry <= max_retries:
+                s = sleep_seconds ** (retry := retry + 1)
+                log.warning(f"{e}: sleeping for {s} second(s) (retry #{retry})")
+                await asyncio.sleep(s)
+            else:
+                raise e
+
+
 def main(args: argparse.Namespace):
     client = get_pulsar_client()
     producer = get_pulsar_producer(client)
-
     pg_config = config["db"]
-    pg_channel_name = args.channel_name or pg_config["channel"]
-    db_host = pg_config["host"]
-
-    log.info(f"Starting listener on channel `{pg_channel_name}' on host `{db_host}'")
-
-    conn = pg_connect(
-        host=pg_config["host"],
-        dbname=pg_config["name"],
-        user=pg_config["user"],
-        password=pg_config["password"],
-    )
-
-    cursor = conn.cursor()
-    sql_statement = sql.SQL("LISTEN {channel}").format(
-        channel=sql.Identifier(pg_channel_name)
-    )
-    cursor.execute(sql_statement)
-    conn.commit()
-
-    def handle_notify():
-        try:
-            for notify in conn.notifies(stop_after=0):
-                payload = json.loads(notify.payload)
-                log.debug("Got a Postgres notification", payload=payload)
-                send_pulsar_event(producer, payload)
-
-        except Exception as e:
-            log.error(f"Error occurred while handling Postgres notification: {e}")
-            raise
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.add_reader(conn, handle_notify)
-    loop.run_forever()
+    if pg_channel_name := args.channel_name:
+        pg_config.pop("channel")
+    else:
+        pg_channel_name = pg_config.pop("channel")
+    try:
+        asyncio.run(listen_forever(pg_config, pg_channel_name, producer))
+    except Exception as e:
+        log.error(f"{e}: attempting to cleanly stop listening")
+    finally:
+        producer.close()
+        client.close()
 
 
 if __name__ == "__main__":
