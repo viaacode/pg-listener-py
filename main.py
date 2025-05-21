@@ -77,7 +77,7 @@ def send_pulsar_event(producer, notification):
 
         data = get_cloudevent_data(notification)
         if essence_id := data.get("essence_id"):
-            return str(essence_id)
+            return f"N/A ({str(essence_id)})"
         else:
             message = "got a notification without essence name or ID"
             log.error(message, pg_notification=notification)
