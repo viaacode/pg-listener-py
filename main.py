@@ -95,7 +95,9 @@ def send_pulsar_event(producer, notification):
         )
     else:
         log.warning(
-            f"`{producer.producer_name()}' received a Postgres notification without correlation_id",  # noqa: E501
+            "`{name}' received a Postgres notification without correlation_id".format(
+                name=producer.producer_name(),
+            ),
             notification=notification,
         )
         attributes = EventAttributes(
@@ -113,7 +115,11 @@ def send_pulsar_event(producer, notification):
         event_timestamp=event.get_event_time_as_int(),
     )
     log.info(
-        f"`{producer.producer_name()}' sent event with ID {message_id} to `{producer.topic()}'",  # noqa: E501
+        "`{name}' sent event with ID {id} to `{topic}'".format(
+            name=producer.producer_name(),
+            id=message_id,
+            topic=producer.topic(),
+        ),
         subject=subject,
     )
 
@@ -161,14 +167,16 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Python service that publishes Postgres LISTEN/NOTIFY events to Pulsar."  # noqa: E501
+        description="Python service that publishes Postgres LISTEN/NOTIFY "
+        "events to Pulsar.",
     )
     parser.add_argument(
         "-c",
         "--channel-name",
         nargs="?",
         type=str,
-        help="Name of the channel to listen to. If provided, overrides the configuration value.",  # noqa: E501
+        help="Name of the channel to listen to.  If provided, overrides the "
+        "configuration value.",
     )
     args = parser.parse_args()
 
